@@ -27,7 +27,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button playButton;              //ボタン
     Button forwardBut;
     Button backBut;
-    ArrayList<Uri> arrayList ;      //Uri型のArrayListを作りUriを格納していく
 
     Timer mainTimer;					//タイマー用
     MainTimerTask mainTimerTask;		//タイマタスククラス
@@ -49,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        arrayList = new ArrayList<Uri>();
 
         // Android 6.0以降の場合
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -76,17 +74,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         backBut.setOnClickListener(this);
 
 
-/*        //タイマーインスタンス生成
-        this.mainTimer = new Timer();
-        //タスククラスインスタンス生成
-        this.mainTimerTask = new MainTimerTask();
-        //タイマースケジュール設定＆開始
-        this.mainTimer.schedule(mainTimerTask, 0,1000);
-        */
-        //テキストビュー
         this.textView = (TextView)findViewById(R.id.textViewTop);
-        //Playボタンにタグ付け
-        playButton.setTag(0);
+        playButton.setTag(0);        //Playボタンにタグ付け
 
 
 
@@ -123,30 +112,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (cursor.moveToFirst()) {
             showImageURI();
+        }else{
+            cursor.close();
         }
-        //cursor.close();
-
-
-/*
-        if (cursor.moveToFirst()){
-            do {
-                // indexからIDを取得し、そのIDから画像のURIを取得する
-                int fieldIndex =cursor.getColumnIndex(MediaStore.Images.Media._ID);
-
-                Long id = cursor.getLong(fieldIndex);
-                Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
-
-                Log.d("ANDROID", "URI: " + imageUri.toString());
-
-                arrayList.add(imageUri);
-
-//                ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
-//                imageVIew.setImageURI(imageUri);
-
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-*/
 
 
 
@@ -169,14 +137,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-        } else if (v.getId() == R.id.playButton) {
-            int numMaxArr = arrayList.size();
-            Log.d("ANDROID", "onClick内 arrayList.size= " + numMaxArr);
-
-            for (int l = 0; l < numMaxArr; l++) {
-                Log.d("ANDROID", " arrayList.get(l) = " + arrayList.get(l));
+        } else if (v.getId() == R.id.backBut) {
+            Log.d("ANDROID", "backButが押されました");
+            if (cursor.moveToPrevious()) {
+                showImageURI();
+            } else {
+                cursor.moveToLast();
+                showImageURI();
             }
 
+
+        } else if (v.getId() == R.id.playButton) {
 
             switch ((Integer)v.getTag()) {
                 case 0:
@@ -186,12 +157,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mainTimer.schedule(mainTimerTask, 0,1000); //タイマースケジュール設定＆開始
                     playButton.setText("停止");
                     playButton.setTag(1);
+                    forwardBut.setEnabled(false);
+                    backBut.setEnabled(false);
                     break;
                 case 1:
                     Log.d("ANDROID", "getTag = "+String.valueOf(v.getTag()));
                     mainTimer.cancel();
                     playButton.setText("再開");
                     playButton.setTag(0);
+                    forwardBut.setEnabled(true);
+                    backBut.setEnabled(true);
                     break;
                 default:
                     Log.d("javatest", "getTag=0,1以外");
@@ -199,18 +174,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
 
-
-
-
-
-        } else if (v.getId() == R.id.backBut) {
-            Log.d("ANDROID", "backButが押されました");
-            if (cursor.moveToPrevious()) {
-                showImageURI();
-            }else{
-                cursor.moveToLast();
-                showImageURI();
-            }
         }
 
     }
@@ -218,14 +181,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private void showImageURI() {
-        Log.d("ANDROID", "getPosition()= "+cursor.getPosition());
-
         int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
         Long id = cursor.getLong(fieldIndex);
         Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
         imageVIew = (ImageView) findViewById(R.id.imageView);
         imageVIew.setImageURI(imageUri);
+
+        Log.d("ANDROID", "cursor.getPosition()= "+cursor.getPosition());
+        Log.d("ANDROID", "cursor.getColumnIndex()= "+ fieldIndex);
+        Log.d("ANDROID", "cursor.getLong()= "+ id);
+        Log.d("ANDROID", "imageUri= "+ imageUri);
 
     }
 
@@ -245,7 +211,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mHandler.post( new Runnable() {
                 public void run() {
 
-                    //実行間隔分を加算処理
+
+                    if (cursor.moveToNext()) {
+                        showImageURI();
+                    }else{
+                        cursor.moveToFirst();
+                        showImageURI();
+                    }
+
+
+/*                    //実行間隔分を加算処理
                     count += 1;
                     //画面にカウントを表示
                     textView.setText(String.valueOf(count));
@@ -253,7 +228,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     //カウンタをcountMaxで0に戻す
                     if (count == countMax){
                         count = 0;
-                    }
+                    }*/
+
+
+
                 }
             });
         }
