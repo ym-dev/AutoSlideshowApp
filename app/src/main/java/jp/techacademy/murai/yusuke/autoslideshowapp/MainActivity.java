@@ -36,6 +36,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Handler mHandler = new Handler();   //UI Threadへのpost用ハンドラ
 
 
+    ContentResolver resolver;
+    Cursor cursor;
+    ImageView imageVIew;
+
+
+
 
 
     @Override
@@ -105,8 +111,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void getContentsInfo() {
 
 
-        ContentResolver resolver = getContentResolver();
-        Cursor cursor = resolver.query(
+        resolver = getContentResolver();
+        cursor = resolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // データの種類
                 null, // 項目(null = 全項目)
                 null, // フィルタ条件(null = フィルタなし)
@@ -114,6 +120,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 null // ソート (null ソートなし)
         );
 
+
+        if (cursor.moveToFirst()) {
+            showImageURI();
+        }
+        //cursor.close();
+
+
+/*
         if (cursor.moveToFirst()){
             do {
                 // indexからIDを取得し、そのIDから画像のURIを取得する
@@ -132,10 +146,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } while (cursor.moveToNext());
         }
         cursor.close();
+*/
 
 
 
     }
+
 
 
     @Override
@@ -143,6 +159,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (v.getId() == R.id.forwardBut) {
             Log.d("ANDROID", "forwardButが押されました");
+
+            if (cursor.moveToNext()) {
+                showImageURI();
+            }else{
+                cursor.moveToFirst();
+                showImageURI();
+            }
+
+
 
         } else if (v.getId() == R.id.playButton) {
             int numMaxArr = arrayList.size();
@@ -180,7 +205,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         } else if (v.getId() == R.id.backBut) {
             Log.d("ANDROID", "backButが押されました");
+            if (cursor.moveToPrevious()) {
+                showImageURI();
+            }else{
+                cursor.moveToLast();
+                showImageURI();
+            }
         }
+
+    }
+
+
+
+    private void showImageURI() {
+        Log.d("ANDROID", "getPosition()= "+cursor.getPosition());
+
+        int fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID);
+        Long id = cursor.getLong(fieldIndex);
+        Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+        imageVIew = (ImageView) findViewById(R.id.imageView);
+        imageVIew.setImageURI(imageUri);
 
     }
 
