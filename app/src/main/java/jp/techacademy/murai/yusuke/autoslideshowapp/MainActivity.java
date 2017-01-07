@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,8 +15,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -24,6 +28,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button forwardBut;
     Button backBut;
     ArrayList<Uri> arrayList ;      //Uri型のArrayListを作りUriを格納していく
+
+    Timer mainTimer;					//タイマー用
+    MainTimerTask mainTimerTask;		//タイマタスククラス
+    TextView textView;					//テキストビュー
+    int count = 0;						//カウント
+    Handler mHandler = new Handler();   //UI Threadへのpost用ハンドラ
+
 
 
 
@@ -57,6 +68,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         backBut = (Button) findViewById(R.id.backBut);
         backBut.setOnClickListener(this);
+
+
+/*        //タイマーインスタンス生成
+        this.mainTimer = new Timer();
+        //タスククラスインスタンス生成
+        this.mainTimerTask = new MainTimerTask();
+        //タイマースケジュール設定＆開始
+        this.mainTimer.schedule(mainTimerTask, 0,1000);
+        */
+        //テキストビュー
+        this.textView = (TextView)findViewById(R.id.textViewTop);
+        //Playボタンにタグ付け
+        playButton.setTag(0);
+
+
 
     }
 
@@ -118,7 +144,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (v.getId() == R.id.forwardBut) {
             Log.d("ANDROID", "forwardButが押されました");
 
-
         } else if (v.getId() == R.id.playButton) {
             int numMaxArr = arrayList.size();
             Log.d("ANDROID", "onClick内 arrayList.size= " + numMaxArr);
@@ -127,10 +152,66 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d("ANDROID", " arrayList.get(l) = " + arrayList.get(l));
             }
 
+
+            switch ((Integer)v.getTag()) {
+                case 0:
+                    Log.d("ANDROID", "getTag = "+String.valueOf(v.getTag()));
+                    mainTimer = new Timer();                //タイマーインスタンス生成
+                    mainTimerTask = new MainTimerTask();    //タスククラスインスタンス生成
+                    mainTimer.schedule(mainTimerTask, 0,1000); //タイマースケジュール設定＆開始
+                    playButton.setText("停止");
+                    playButton.setTag(1);
+                    break;
+                case 1:
+                    Log.d("ANDROID", "getTag = "+String.valueOf(v.getTag()));
+                    mainTimer.cancel();
+                    playButton.setText("再開");
+                    playButton.setTag(0);
+                    break;
+                default:
+                    Log.d("javatest", "getTag=0,1以外");
+                    break;
+            }
+
+
+
+
+
+
         } else if (v.getId() == R.id.backBut) {
             Log.d("ANDROID", "backButが押されました");
         }
 
+    }
+
+
+//     *
+//     * タイマータスク派生クラス
+//     * run()に定周期で処理したい内容を記述
+//     *
+
+    public class MainTimerTask extends TimerTask {
+
+        int countMax = 5;
+
+        @Override
+        public void run() {
+            //ここに定周期で実行したい処理を記述します
+            mHandler.post( new Runnable() {
+                public void run() {
+
+                    //実行間隔分を加算処理
+                    count += 1;
+                    //画面にカウントを表示
+                    textView.setText(String.valueOf(count));
+
+                    //カウンタをcountMaxで0に戻す
+                    if (count == countMax){
+                        count = 0;
+                    }
+                }
+            });
+        }
     }
 
 
