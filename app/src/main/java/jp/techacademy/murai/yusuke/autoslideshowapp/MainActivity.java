@@ -74,10 +74,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+
         switch (requestCode) {
             case PERMISSIONS_REQUEST_CODE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("ANDROID", "パーミッション許可されました");
                     getContentsInfo();
+                }else{
+                    Log.d("ANDROID", "パーミッション非許可にされました");
+                    playButton.setEnabled(false);
+                    forwardBut.setEnabled(false);
+                    backBut.setEnabled(false);
+                    textView.setText("画像へのアクセスが許可されていません");
                 }
                 break;
             default:
