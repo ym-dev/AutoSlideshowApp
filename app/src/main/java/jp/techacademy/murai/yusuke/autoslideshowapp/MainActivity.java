@@ -17,7 +17,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -27,27 +26,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button playButton;              //ボタン
     Button forwardBut;
     Button backBut;
+    TextView textView;
 
     Timer mainTimer;					//タイマー用
     MainTimerTask mainTimerTask;		//タイマタスククラス
-    TextView textView;					//テキストビュー
     int count = 0;						//カウント
     Handler mHandler = new Handler();   //UI Threadへのpost用ハンドラ
-
 
     ContentResolver resolver;
     Cursor cursor;
     ImageView imageVIew;
 
 
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        playButton = (Button) findViewById(R.id.playButton);
+        playButton.setOnClickListener(this);
+        playButton.setTag(0);        //Playボタンにタグ付け
 
+        forwardBut = (Button) findViewById(R.id.forwardBut);
+        forwardBut.setOnClickListener(this);
+
+        backBut = (Button) findViewById(R.id.backBut);
+        backBut.setOnClickListener(this);
+
+        textView = (TextView) findViewById(R.id.textViewTop);
 
         // Android 6.0以降の場合
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -63,20 +68,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             getContentsInfo();
         }
-        playButton = (Button) findViewById(R.id.playButton);
-        playButton.setTag(0);
-        playButton.setOnClickListener(this);
-
-        forwardBut = (Button) findViewById(R.id.forwardBut);
-        forwardBut.setOnClickListener(this);
-
-        backBut = (Button) findViewById(R.id.backBut);
-        backBut.setOnClickListener(this);
-
-
-        this.textView = (TextView)findViewById(R.id.textViewTop);
-        playButton.setTag(0);        //Playボタンにタグ付け
-
 
 
     }
@@ -87,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case PERMISSIONS_REQUEST_CODE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getContentsInfo();
-
                 }
                 break;
             default:
@@ -98,8 +88,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private void getContentsInfo() {
-
-
         resolver = getContentResolver();
         cursor = resolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // データの種類
@@ -109,17 +97,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 null // ソート (null ソートなし)
         );
 
-
         if (cursor.moveToFirst()) {
             showImageURI();
         }else{
             cursor.close();
+            playButton.setEnabled(false);
+            forwardBut.setEnabled(false);
+            backBut.setEnabled(false);
+            textView.setText("画像はありません");
         }
 
-
-
     }
-
 
 
     @Override
@@ -130,31 +118,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             if (cursor.moveToNext()) {
                 showImageURI();
-            }else{
-                cursor.moveToFirst();
+            }else if(cursor.moveToFirst()){
                 showImageURI();
             }
-
-
 
         } else if (v.getId() == R.id.backBut) {
             Log.d("ANDROID", "backButが押されました");
             if (cursor.moveToPrevious()) {
                 showImageURI();
-            } else {
-                cursor.moveToLast();
+            } else if(cursor.moveToLast()){
                 showImageURI();
             }
 
 
         } else if (v.getId() == R.id.playButton) {
+            Log.d("ANDROID", "playButtonが押されました");
 
             switch ((Integer)v.getTag()) {
                 case 0:
                     Log.d("ANDROID", "getTag = "+String.valueOf(v.getTag()));
                     mainTimer = new Timer();                //タイマーインスタンス生成
                     mainTimerTask = new MainTimerTask();    //タスククラスインスタンス生成
-                    mainTimer.schedule(mainTimerTask, 0,1000); //タイマースケジュール設定＆開始
+                    mainTimer.schedule(mainTimerTask, 0,2000); //タイマースケジュール設定＆開始
                     playButton.setText("停止");
                     playButton.setTag(1);
                     forwardBut.setEnabled(false);
@@ -163,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case 1:
                     Log.d("ANDROID", "getTag = "+String.valueOf(v.getTag()));
                     mainTimer.cancel();
-                    playButton.setText("再開");
+                    playButton.setText("再生");
                     playButton.setTag(0);
                     forwardBut.setEnabled(true);
                     backBut.setEnabled(true);
@@ -172,10 +157,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Log.d("javatest", "getTag=0,1以外");
                     break;
             }
-
-
         }
-
     }
 
 
@@ -196,41 +178,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-//     *
 //     * タイマータスク派生クラス
 //     * run()に定周期で処理したい内容を記述
-//     *
-
     public class MainTimerTask extends TimerTask {
-
-        int countMax = 5;
 
         @Override
         public void run() {
-            //ここに定周期で実行したい処理を記述します
+            //ここに定周期で実行したい処理を記述
             mHandler.post( new Runnable() {
                 public void run() {
 
 
                     if (cursor.moveToNext()) {
                         showImageURI();
-                    }else{
-                        cursor.moveToFirst();
+                    }else if(cursor.moveToFirst()){
                         showImageURI();
                     }
-
-
-/*                    //実行間隔分を加算処理
-                    count += 1;
-                    //画面にカウントを表示
-                    textView.setText(String.valueOf(count));
-
-                    //カウンタをcountMaxで0に戻す
-                    if (count == countMax){
-                        count = 0;
-                    }*/
-
-
 
                 }
             });
