@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         backBut = (Button) findViewById(R.id.backBut);
         backBut.setOnClickListener(this);
 
-        textView = (TextView) findViewById(R.id.textViewTop);
+        textView = (TextView) findViewById(R.id.textView);
 
         // Android 6.0以降の場合
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
